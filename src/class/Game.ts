@@ -87,6 +87,13 @@ export class Game {
         this._controls.zoomSpeed = 1.0
         //右键拖拽 
         this._controls.enablePan = true
+        /**
+         * 因为不知道什么原因，建议将 node_modules/three-orbitcontrols-ts/dist/index.js中的部分
+         * if (this.object instanceof THREE.PerspectiveCamera) {
+         * 注释掉，改为
+         * if (true) {
+         * 因为this.object最后识别为 object，导致拖拉、缩放无作用
+         */
     }
 
     public createScene(): void {
