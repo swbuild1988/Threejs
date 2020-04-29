@@ -22,6 +22,10 @@ export class ThreeOption {
     public zRotation: number
     /** 投射阴影 */
     public castShadow: boolean
+    /** 透明 */
+    public transparent: boolean
+    /** 透明度 */
+    public opacity: number
     /** 贴纸 */
     public textureUrl: string
     /** 贴纸重复 */
@@ -44,6 +48,8 @@ export class ThreeOption {
         _yRotation = 0,
         _zRotation = 0,
         _castShadow = true,
+        _transparent = false,
+        _opacity = 1,
         _textureUrl = '',
         _textureRepeat = 1,
         _op = '',
@@ -61,6 +67,8 @@ export class ThreeOption {
         _yRotation ? : number,
         _zRotation ? : number,
         _castShadow ? : boolean,
+        _transparent ? : boolean,
+        _opacity ? : number,
         _textureUrl ? : string,
         _textureRepeat ? : number,
         _op ? : string,
@@ -78,6 +86,8 @@ export class ThreeOption {
         this.yRotation = _yRotation
         this.zRotation = _zRotation
         this.castShadow = _castShadow
+        this.transparent = _transparent
+        this.opacity = _opacity
         this.textureUrl = _textureUrl
         this.textureRepeat = _textureRepeat
         this.op = _op

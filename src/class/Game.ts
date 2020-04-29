@@ -104,6 +104,8 @@ export class Game {
 
         this.createDoor()
         this.createWindow()
+        this.createOutWall()
+        this.createText()
 
         // 将所有的对象添加到场景中
         this._gameObject.forEach((object: THREE.Mesh) => {
@@ -201,7 +203,7 @@ export class Game {
             this.makeBoxGeometry(tmpWall)
         }
 
-        
+
         //先挖个洞--门框一样大的洞
         let doorHole: ThreeOption = new ThreeOption({
             _name: '门洞',
@@ -251,7 +253,7 @@ export class Game {
         // 添加门（实际就是在门框里挖个洞）
         let door: ThreeOption = new ThreeOption({
             _name: '门',
-            _width: 210,
+            _width: 205,
             _height: 180,
             _depth: 20,
             _x: -300,
@@ -261,6 +263,35 @@ export class Game {
         })
         this._boxes.push(door)
         this.makeBoxGeometry(door)
+
+        let leftDoor: ThreeOption = new ThreeOption({
+            _name: '左门',
+            _width: 100,
+            _height: 180,
+            _depth: 5,
+            _x: -350,
+            _y: 95,
+            _z: 500,
+            _textureUrl: 'door-left',
+            _transparent: true
+        })
+        this._boxes.push(leftDoor)
+        this.makeBoxGeometry(leftDoor)
+
+        let rightDoor: ThreeOption = new ThreeOption({
+            _name: '右门',
+            _width: 100,
+            _height: 180,
+            _depth: 5,
+            _color: '#999999',
+            _x: -250,
+            _y: 95,
+            _z: 500,
+            _textureUrl: 'door-right',
+            _transparent: true
+        })
+        this._boxes.push(rightDoor)
+        this.makeBoxGeometry(rightDoor)
     }
 
     /** 添加窗户 */
@@ -278,6 +309,119 @@ export class Game {
         })
         this._boxes.push(windowSill)
         this.makeBoxGeometry(windowSill)
+        //添加窗户玻璃
+        let window: ThreeOption = new ThreeOption({
+            _name: '窗户',
+            _width: 420,
+            _height: 150,
+            _depth: 5,
+            _color: '#0000ff',
+            _x: 150,
+            _y: 110,
+            _z: 500,
+            _transparent: true,
+            _opacity: 0.4
+        })
+        this._boxes.push(window)
+        this.makeBoxGeometry(window)
+    }
+
+    /** 添加外墙 */
+    private createOutWall(): void {
+        let outwall1: ThreeOption = new ThreeOption({
+            _name: "外墙1",
+            _width: 10,
+            _height: 200,
+            _depth: 1300,
+            _x: -795,
+            _y: 100,
+            _color: '#BCD2EE'
+        })
+        this._boxes.push(outwall1)
+        this.makeBoxGeometry(outwall1)
+        //先挖个洞--窗户
+        let windowHole1: ThreeOption = new ThreeOption({
+            _name: '外窗洞1',
+            _width: 10,
+            _height: 100,
+            _depth: 1300,
+            _x: -795,
+            _y: 120,
+            _op: '-',
+        })
+        this._boxes.push(windowHole1)
+        this.makeBoxGeometry(windowHole1)
+        //再安窗户
+        let window1: ThreeOption = new ThreeOption({
+            _name: '外窗1',
+            _width: 5,
+            _height: 100,
+            _depth: 1300,
+            _color: '#0000ff',
+            _x: -795,
+            _y: 120,
+            _transparent: true,
+            _opacity: 0.4
+        })
+        this._boxes.push(window1)
+        this.makeBoxGeometry(window1)
+
+
+        let outwall2: ThreeOption = new ThreeOption({
+            _name: "外墙2",
+            _width: 10,
+            _height: 200,
+            _depth: 1300,
+            _x: 795,
+            _y: 100,
+            _color: '#BCD2EE'
+        })
+        this._boxes.push(outwall2)
+        this.makeBoxGeometry(outwall2)
+        //先挖个洞--窗户
+        let windowHole2: ThreeOption = new ThreeOption({
+            _name: '外窗洞2',
+            _width: 10,
+            _height: 100,
+            _depth: 1300,
+            _x: 795,
+            _y: 120,
+            _op: '-',
+        })
+        this._boxes.push(windowHole2)
+        this.makeBoxGeometry(windowHole2)
+        //再安窗户
+        let window2: ThreeOption = new ThreeOption({
+            _name: '外窗2',
+            _width: 5,
+            _height: 100,
+            _depth: 1300,
+            _color: '#0000ff',
+            _x: 795,
+            _y: 120,
+            _transparent: true,
+            _opacity: 0.4
+        })
+        this._boxes.push(window2)
+        this.makeBoxGeometry(window2)
+    }
+
+    /** 添加裱字 */
+    private createText(): void {
+        // 添加门（实际就是在门框里挖个洞）
+        let text: ThreeOption = new ThreeOption({
+            _name: '裱字',
+            _width: 150,
+            _height: 60,
+            _depth: 5,
+            _x: -250,
+            _y: 130,
+            _z: -495,
+            _color: '#ffffff',
+            _textureUrl: 'text',
+        })
+        this._boxes.push(text)
+        this.makeBoxGeometry(text)
     }
 
     /** 生成盒子 */
@@ -285,7 +429,9 @@ export class Game {
         // 立方体几何图形
         let geometry: THREE.BoxGeometry = new THREE.BoxGeometry(config.width, config.height, config.depth)
         let material: THREE.MeshLambertMaterial = new THREE.MeshLambertMaterial({
-            color: config.color
+            color: config.color,
+            transparent: config.transparent,
+            opacity: config.opacity,
         })
         // 加载纹理贴图
         if (config.textureUrl.length > 0) {
@@ -297,6 +443,7 @@ export class Game {
         }
         // 几何模型
         let mesh: THREE.Mesh = new THREE.Mesh(geometry, material)
+        mesh.name = config.name
         mesh.position.x = config.x
         mesh.position.y = config.y
         mesh.position.z = config.z
