@@ -1,0 +1,388 @@
+import * as THREE from 'three'
+const ThreeBSP = require('tthreebsp')(THREE)
+import {
+    OrbitControls
+} from 'three-orbitcontrols-ts'
+import {
+    ThreeOption
+} from '@/class/ThreeOption'
+
+export class Game {
+    private _scene!: THREE.Scene
+    private _camera!: THREE.PerspectiveCamera
+    private _renderer!: THREE.WebGLRenderer
+    private _element: HTMLElement
+    private _material!: THREE.MeshBasicMaterial
+    private _geometry!: THREE.BoxGeometry
+    private _box!: THREE.Mesh
+    private _controls!: OrbitControls
+    private _gameObject: THREE.Mesh[] = []
+    private _boxes: ThreeOption[] = []
+
+    public constructor(element: HTMLElement) {
+        this._element = element
+
+        this.initTreejs()
+        this.initLight()
+        this.initControls()
+    }
+
+    private initTreejs(): void {
+        this._scene = new THREE.Scene()
+        this._camera = new THREE.PerspectiveCamera(75, this._element.offsetWidth / this._element.offsetHeight, 0.1, 10000)
+
+        this._camera.position.set(0, 1000, 800)
+        this._camera.lookAt(this._scene.position)
+
+        this._renderer = new THREE.WebGLRenderer({
+            antialias: true,
+            alpha: true
+        })
+
+        this._geometry = new THREE.BoxGeometry(100, 100, 100)
+        let texture: THREE.Texture = new THREE.TextureLoader().load(require('@/assets/crate.jpg'))
+        this._material = new THREE.MeshLambertMaterial({
+            map: texture
+        })
+        this._box = new THREE.Mesh(this._geometry, this._material)
+        this._scene.add(this._box)
+    }
+
+    private initLight(): void {
+        // 平行光，约等于太阳光
+        let light1 = new THREE.SpotLight(0xffffff)
+        light1.position.set(1000, 1000, 800);
+        light1.castShadow = true;
+
+        light1.shadow.mapSize.width = 1024;
+        light1.shadow.mapSize.height = 1024;
+
+        light1.shadow.camera.near = 500;
+        light1.shadow.camera.far = 4000;
+        light1.shadow.camera.fov = 30;
+
+        this._scene.add(light1)
+
+        // 环境光，周围亮一点
+        let light2 = new THREE.AmbientLight(0x555555); // soft white light
+        this._scene.add(light2);
+
+    }
+
+    /** 初始化控制器 */
+    private initControls(): void {
+
+        // 添加控制
+        this._controls = new OrbitControls(this._camera, this._renderer.domElement)
+        // How far you can orbit vertically, upper and lower limits.
+        this._controls.minPolarAngle = 0
+        this._controls.maxPolarAngle = Math.PI
+        // How far you can dolly in and out ( PerspectiveCamera only )
+        this._controls.minDistance = 0
+        this._controls.maxDistance = Infinity
+        // 使动画循环使用时阻尼或自转 意思是否有惯性 
+        this._controls.enableDamping = true
+        //缩放 
+        this._controls.enableZoom = true
+        this._controls.zoomSpeed = 1.0
+        //右键拖拽 
+        this._controls.enablePan = true
+    }
+
+    public createScene(): void {
+        this._renderer.setSize(this._element.offsetWidth, this._element.offsetHeight)
+        this._element.appendChild(this._renderer.domElement)
+
+        // 添加地板
+        this.createFloor()
+
+        // 添加台阶
+        this.createStep()
+
+        // 添加围墙
+        this.createWall()
+
+        this.createDoor()
+        this.createWindow()
+
+        // 将所有的对象添加到场景中
+        this._gameObject.forEach((object: THREE.Mesh) => {
+            this._scene.add(object)
+        })
+
+        this._renderer.render(this._scene, this._camera)
+        this.animate()
+    }
+
+    /** 动画效果 */
+    public animate(): void {
+
+        this._controls.update()
+
+        requestAnimationFrame(this.animate.bind(this))
+        this._box.rotation.x += 0.04
+        this._box.rotation.y += 0.02
+        this._renderer.render(this._scene, this._camera)
+    }
+
+    /** 添加地板 */
+    private createFloor(): void {
+        let floor: ThreeOption = new ThreeOption({
+            _name: '地板',
+            _width: 1600,
+            _height: 10,
+            _depth: 1300,
+            _y: -5,
+            _color: '#BEC9BE',
+            _textureUrl: 'floor',
+            _textureRepeat: 10
+        })
+        this._boxes.push(floor)
+        this.makeBoxGeometry(floor)
+    }
+
+    /** 添加台阶 */
+    private createStep(): void {
+        let step: ThreeOption = new ThreeOption({
+            _name: '台阶',
+            _width: 200,
+            _height: 20,
+            _depth: 260,
+            //坐标
+            _x: -300,
+            _y: 5,
+            _z: 600,
+            _xRotation: 3,
+            _op: '-',
+        })
+        this._boxes.push(step)
+        this.makeBoxGeometry(step)
+    }
+
+    /** 添加围墙 */
+    private createWall(): void {
+        let wall: ThreeOption = new ThreeOption({
+            _name: '围墙',
+            _width: 10,
+            _height: 200,
+            _color: '#BCD2EE',
+            _paths: [
+                [0, 0],
+                [500, 0],
+                [500, 500],
+                [-500, 500],
+                [-500, -500],
+                [0, -500],
+                [0, 0]
+            ],
+            _xRotation: 270,
+            _zRotation: 90
+        })
+        this._boxes.push(wall)
+        /** 挤压几何生成实心的立方体，不符合要求
+         * this.makeExtrudeGeometry(wall)
+         */
+
+        // 根据多个路径生成多个盒子
+        for (let i = 0; i < wall.paths.length - 1; i++) {
+            let start: number[] = wall.paths[i]
+            let end: number[] = wall.paths[i + 1]
+            let tmpWall: ThreeOption = new ThreeOption({
+                _name: "墙" + i,
+                _height: wall.height,
+                _width: start[0] == end[0] ? wall.width : Math.abs(start[0] - end[0]) + wall.width,
+                _depth: start[1] == end[1] ? wall.width : Math.abs(start[1] - end[1]) + wall.width,
+                _color: wall.color,
+                _x: (start[0] + end[0]) / 2 + wall.x,
+                _y: wall.y + wall.height / 2,
+                _z: (start[1] + end[1]) / 2 + wall.z,
+                _op: i == 0 ? '' : '+',
+            })
+            this.makeBoxGeometry(tmpWall)
+        }
+
+        
+        //先挖个洞--门框一样大的洞
+        let doorHole: ThreeOption = new ThreeOption({
+            _name: '门洞',
+            _width: 220,
+            _height: 190,
+            _depth: 20,
+            _x: -300,
+            _y: 95,
+            _z: 500,
+            _op: '-',
+        })
+        this._boxes.push(doorHole)
+        this.makeBoxGeometry(doorHole)
+
+        //先挖个洞--窗户洞一样大的洞
+        let windowHole: ThreeOption = new ThreeOption({
+            _name: '窗洞',
+            _width: 420,
+            _height: 150,
+            _depth: 20,
+            _x: 150,
+            _y: 110,
+            _z: 500,
+            _op: '-',
+        })
+        this._boxes.push(windowHole)
+        this.makeBoxGeometry(windowHole)
+
+    }
+
+    /** 添加门 */
+    private createDoor(): void {
+        // 添加门框，比门稍微大点
+        let doorFrame: ThreeOption = new ThreeOption({
+            _name: '门框',
+            _width: 220,
+            _height: 190,
+            _depth: 20,
+            _color: "#eeeeee",
+            _x: -300,
+            _y: 95,
+            _z: 500,
+        })
+        this._boxes.push(doorFrame)
+        this.makeBoxGeometry(doorFrame)
+
+        // 添加门（实际就是在门框里挖个洞）
+        let door: ThreeOption = new ThreeOption({
+            _name: '门',
+            _width: 210,
+            _height: 180,
+            _depth: 20,
+            _x: -300,
+            _y: 95,
+            _z: 500,
+            _op: '-',
+        })
+        this._boxes.push(door)
+        this.makeBoxGeometry(door)
+    }
+
+    /** 添加窗户 */
+    private createWindow(): void {
+        //添加窗台
+        let windowSill: ThreeOption = new ThreeOption({
+            _name: '窗台',
+            _width: 420,
+            _height: 15,
+            _depth: 30,
+            _color: '#ffffff',
+            _x: 150,
+            _y: 35,
+            _z: 510,
+        })
+        this._boxes.push(windowSill)
+        this.makeBoxGeometry(windowSill)
+    }
+
+    /** 生成盒子 */
+    private makeBoxGeometry(config: ThreeOption): void {
+        // 立方体几何图形
+        let geometry: THREE.BoxGeometry = new THREE.BoxGeometry(config.width, config.height, config.depth)
+        let material: THREE.MeshLambertMaterial = new THREE.MeshLambertMaterial({
+            color: config.color
+        })
+        // 加载纹理贴图
+        if (config.textureUrl.length > 0) {
+            let texture: THREE.Texture = new THREE.TextureLoader().load(require(`@/assets/${config.textureUrl}.png`))
+            texture.wrapS = THREE.RepeatWrapping
+            texture.wrapT = THREE.RepeatWrapping
+            texture.repeat.set(config.textureRepeat, config.textureRepeat)
+            material.map = texture
+        }
+        // 几何模型
+        let mesh: THREE.Mesh = new THREE.Mesh(geometry, material)
+        mesh.position.x = config.x
+        mesh.position.y = config.y
+        mesh.position.z = config.z
+        mesh.rotation.x = config.xRotation * Math.PI / 180
+        mesh.rotation.y = config.yRotation * Math.PI / 180
+        mesh.rotation.z = config.zRotation * Math.PI / 180
+        mesh.castShadow = config.castShadow
+
+        /**
+         * 如果已经有了对象，则对其进行各种处理
+         * subtract 差集 '-'
+         * union    并集 ''
+         * interset 交集 '+'
+         */
+        if (config.op == '-') {
+            let last: THREE.Mesh | undefined = this._gameObject.pop()
+            if (last) {
+                const bsp1 = new ThreeBSP(last)
+                const bsp2 = new ThreeBSP(mesh)
+                //开始计算从bsp1减去bsp2后的BSP对象
+                const BSP = bsp1.subtract(bsp2)
+                //获取结算结果中的geometry对象
+                let tmp: THREE.Mesh = BSP.toMesh()
+                tmp.material = last.material
+                this._gameObject.push(tmp)
+            } else { // gameobject为空
+                this._gameObject.push(mesh)
+            }
+        } else if (config.op == '+') {
+            let last: THREE.Mesh | undefined = this._gameObject.pop()
+            if (last) {
+                const bsp1 = new ThreeBSP(last)
+                const bsp2 = new ThreeBSP(mesh)
+                //开始计算从bsp1减去bsp2后的BSP对象
+                const BSP = bsp1.union(bsp2)
+                //获取结算结果中的geometry对象
+                let tmp: THREE.Mesh = BSP.toMesh()
+                tmp.material = last.material
+                this._gameObject.push(tmp)
+            } else { // gameobject为空
+                this._gameObject.push(mesh)
+            }
+        } else {
+            this._gameObject.push(mesh)
+        }
+
+    }
+
+    /** 生成挤压几何体（根据路径生成三维） */
+    private makeExtrudeGeometry(config: ThreeOption): void {
+        // 路径
+        let shape: THREE.Shape = new THREE.Shape()
+        for (let i = 0; i < config.paths.length; i++) {
+            let path: number[] = config.paths[i]
+            if (i == 0) {
+                shape.moveTo(path[0], path[1])
+            } else {
+                shape.lineTo(path[0], path[1])
+            }
+        }
+
+        // 参数
+        var extrudeSettings: THREE.ExtrudeGeometryOptions = {
+            steps: 200,
+            depth: config.height,
+            bevelEnabled: true,
+            bevelThickness: 1,
+            bevelSize: 1,
+            bevelOffset: 0,
+            bevelSegments: 1
+        }
+
+        let geometry: THREE.ExtrudeGeometry = new THREE.ExtrudeGeometry(shape, extrudeSettings)
+        let material: THREE.MeshLambertMaterial = new THREE.MeshLambertMaterial({
+            color: config.color
+        })
+
+        // 几何模型
+        let mesh: THREE.Mesh = new THREE.Mesh(geometry, material)
+        mesh.position.x = config.x
+        mesh.position.y = config.y
+        mesh.position.z = config.z
+        mesh.rotation.x = config.xRotation * Math.PI / 180
+        mesh.rotation.y = config.yRotation * Math.PI / 180
+        mesh.rotation.z = config.zRotation * Math.PI / 180
+        mesh.castShadow = config.castShadow
+        this._gameObject.push(mesh)
+    }
+}
