@@ -55,7 +55,7 @@
                 </Menu>
             </Sider>
             <Layout :style="{padding: '0 24px 24px'}">
-                <Content :style="{padding: '24px', minHeight: '680px', background: '#fff'}">
+                <Content :style="{padding: '24px', background: '#fff'}">
                     <router-view></router-view>
                 </Content>
             </Layout>

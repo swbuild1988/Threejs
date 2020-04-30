@@ -18,6 +18,8 @@ export class Game {
     private _controls!: OrbitControls
     private _gameObject: THREE.Mesh[] = []
     private _boxes: ThreeOption[] = []
+    private _preMesh!: THREE.Mesh
+    private _preMaterial!: THREE.Material | THREE.Material[]
 
     public constructor(element: HTMLElement) {
         this._element = element
@@ -29,16 +31,17 @@ export class Game {
 
     private initTreejs(): void {
         this._scene = new THREE.Scene()
-        this._camera = new THREE.PerspectiveCamera(75, this._element.offsetWidth / this._element.offsetHeight, 0.1, 10000)
-
+        // initCamera
+        this._camera = new THREE.PerspectiveCamera(75, this._element.clientWidth / this._element.clientHeight, 0.1, 10000)
         this._camera.position.set(0, 1000, 800)
         this._camera.lookAt(this._scene.position)
-
+        // 背景透明
         this._renderer = new THREE.WebGLRenderer({
             antialias: true,
             alpha: true
         })
 
+        // 随便建个盒子玩
         this._geometry = new THREE.BoxGeometry(100, 100, 100)
         let texture: THREE.Texture = new THREE.TextureLoader().load(require('@/assets/crate.jpg'))
         this._material = new THREE.MeshLambertMaterial({
@@ -51,21 +54,21 @@ export class Game {
     private initLight(): void {
         // 平行光，约等于太阳光
         let light1 = new THREE.SpotLight(0xffffff)
-        light1.position.set(1000, 1000, 800);
-        light1.castShadow = true;
+        light1.position.set(1000, 1000, 800)
+        light1.castShadow = true
 
-        light1.shadow.mapSize.width = 1024;
-        light1.shadow.mapSize.height = 1024;
+        light1.shadow.mapSize.width = 1024
+        light1.shadow.mapSize.height = 1024
 
-        light1.shadow.camera.near = 500;
-        light1.shadow.camera.far = 4000;
-        light1.shadow.camera.fov = 30;
+        light1.shadow.camera.near = 500
+        light1.shadow.camera.far = 4000
+        light1.shadow.camera.fov = 30
 
         this._scene.add(light1)
 
         // 环境光，周围亮一点
-        let light2 = new THREE.AmbientLight(0x555555); // soft white light
-        this._scene.add(light2);
+        let light2 = new THREE.AmbientLight(0x555555) // soft white light
+        this._scene.add(light2)
 
     }
 
@@ -99,16 +102,12 @@ export class Game {
     public createScene(): void {
         this._renderer.setSize(this._element.offsetWidth, this._element.offsetHeight)
         this._element.appendChild(this._renderer.domElement)
+        // 绑定鼠标点击事件
+        this._element.addEventListener('mousedown', this.onDocumentMouseDown.bind(this), false)
 
-        // 添加地板
         this.createFloor()
-
-        // 添加台阶
         this.createStep()
-
-        // 添加围墙
         this.createWall()
-
         this.createDoor()
         this.createWindow()
         this.createOutWall()
@@ -121,6 +120,43 @@ export class Game {
 
         this._renderer.render(this._scene, this._camera)
         this.animate()
+    }
+
+    /** 点击事件 */
+    private onDocumentMouseDown(event: MouseEvent): void {
+
+        // 如果已经点过，将上一次变的改回去
+        if (this._preMesh && this._preMaterial) {
+            this._preMesh.material = this._preMaterial
+        }
+
+        event.preventDefault()
+
+        // 射线，用作点击事件
+        let raycaster: THREE.Raycaster = new THREE.Raycaster()
+        let mouse: THREE.Vector2 = new THREE.Vector2()
+        mouse.x = (event.offsetX / this._element.offsetWidth) * 2 - 1
+        mouse.y = -(event.offsetY / this._element.offsetHeight) * 2 + 1
+
+        raycaster.setFromCamera(mouse, this._camera)
+
+        let intersects: THREE.Intersection[] = raycaster.intersectObjects(this._scene.children)
+
+        if (intersects.length > 0 && intersects[0].object instanceof THREE.Mesh) {
+
+            // 将点击物保存
+            this._preMesh = intersects[0].object
+            this._preMaterial = intersects[0].object.material
+
+            // 变色透明
+            var object: THREE.Mesh = intersects[0].object
+            var material = new THREE.MeshLambertMaterial({
+                color: 0xcc0000,
+                transparent: true,
+                opacity: 0.6
+            })
+            object.material = material
+        }
     }
 
     /** 动画效果 */
@@ -474,6 +510,7 @@ export class Game {
                 const BSP = bsp1.subtract(bsp2)
                 //获取结算结果中的geometry对象
                 let tmp: THREE.Mesh = BSP.toMesh()
+                tmp.name = last.name
                 tmp.material = last.material
                 this._gameObject.push(tmp)
             } else { // gameobject为空
@@ -488,6 +525,7 @@ export class Game {
                 const BSP = bsp1.union(bsp2)
                 //获取结算结果中的geometry对象
                 let tmp: THREE.Mesh = BSP.toMesh()
+                tmp.name = last.name
                 tmp.material = last.material
                 this._gameObject.push(tmp)
             } else { // gameobject为空

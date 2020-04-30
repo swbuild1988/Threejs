@@ -15,15 +15,22 @@
 
     @Component({})
     export default class ThreeClass extends Vue {
-
+        
         mounted() {
-            let element: HTMLElement | null = document.getElementById("three_id")
-            if (element) {
-                let game: Game = new Game(element)
+            setTimeout(() => {
 
-                game.createScene()
-                
-            }
+                let element: HTMLElement | null = document.getElementById("three_id")
+                if (element) {
+                    let width: number = element.offsetWidth
+                    let height: number = element.offsetHeight
+                    console.log("width0", width)
+                    console.log("height0", height)
+                    let game: Game = new Game(element)
+
+                    game.createScene()
+
+                }
+            }, 10)
         }
     }
 </script>
@@ -32,5 +39,6 @@
     .three {
         width: 100%;
         height: 100%;
+        border: 1px solid red;
     }
 </style>
