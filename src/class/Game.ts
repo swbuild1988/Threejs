@@ -20,6 +20,20 @@ export class Game {
     private _boxes: ThreeOption[] = []
     private _preMesh!: THREE.Mesh
     private _preMaterial!: THREE.Material | THREE.Material[]
+    /** 门的运动状态，默认不动 */
+    private _doorStatus: boolean = false
+    /** 门的方向，1:开，-1:关 */
+    private _doorDirection: number = 1
+    /** 左门的初始x */
+    private _leftDoorInitX: number = 0
+    /** 右门的初始x */
+    private _rightDoorInitX: number = 0
+    /** 门打开的距离 */
+    private _doorOpenLength: number = 80
+    /** 左门对象 */
+    private _leftDoorMesh!: THREE.Mesh
+    /** 右门对象 */
+    private _rightDoorMesh!: THREE.Mesh
 
     public constructor(element: HTMLElement) {
         this._element = element
@@ -48,6 +62,7 @@ export class Game {
             map: texture
         })
         this._box = new THREE.Mesh(this._geometry, this._material)
+        // this._box.position.set(0, 200, 80)
         this._scene.add(this._box)
     }
 
@@ -148,14 +163,19 @@ export class Game {
             this._preMesh = intersects[0].object
             this._preMaterial = intersects[0].object.material
 
-            // 变色透明
             var object: THREE.Mesh = intersects[0].object
-            var material = new THREE.MeshLambertMaterial({
-                color: 0xcc0000,
-                transparent: true,
-                opacity: 0.6
-            })
-            object.material = material
+
+            if (object.name == '左门' || object.name == '右门') {
+                this._doorStatus = !this._doorStatus
+            } else {
+                // 变色透明
+                var material = new THREE.MeshLambertMaterial({
+                    color: 0xcc0000,
+                    transparent: true,
+                    opacity: 0.6
+                })
+                object.material = material
+            }
         }
     }
 
@@ -167,6 +187,19 @@ export class Game {
         requestAnimationFrame(this.animate.bind(this))
         this._box.rotation.x += 0.04
         this._box.rotation.y += 0.02
+
+        if (this._doorStatus) {
+            let speed = 0.5
+            this._leftDoorMesh.position.x += -1 * speed * this._doorDirection
+            this._rightDoorMesh.position.x += speed * this._doorDirection
+            if (this._leftDoorInitX - this._leftDoorMesh.position.x >= this._doorOpenLength ||
+                this._leftDoorMesh.position.x - this._leftDoorInitX > 0) {
+                this._doorStatus = false
+                this._doorDirection = this._doorDirection * -1
+            }
+
+        }
+
         this._renderer.render(this._scene, this._camera)
     }
 
@@ -320,6 +353,8 @@ export class Game {
         })
         this._boxes.push(leftDoor)
         this.makeBoxGeometry(leftDoor)
+        this._leftDoorMesh = this._gameObject[this._gameObject.length - 1]
+        this._leftDoorInitX = this._leftDoorMesh.position.x
 
         let rightDoor: ThreeOption = new ThreeOption({
             _name: '右门',
@@ -335,6 +370,8 @@ export class Game {
         })
         this._boxes.push(rightDoor)
         this.makeBoxGeometry(rightDoor)
+        this._rightDoorMesh = this._gameObject[this._gameObject.length - 1]
+        this._rightDoorInitX = this._rightDoorMesh.position.x
     }
 
     /** 添加窗户 */
@@ -487,9 +524,7 @@ export class Game {
         // 几何模型
         let mesh: THREE.Mesh = new THREE.Mesh(geometry, material)
         mesh.name = config.name
-        mesh.position.x = config.x
-        mesh.position.y = config.y
-        mesh.position.z = config.z
+        mesh.position.set(config.x, config.y, config.z)
         mesh.rotation.x = config.xRotation * Math.PI / 180
         mesh.rotation.y = config.yRotation * Math.PI / 180
         mesh.rotation.z = config.zRotation * Math.PI / 180

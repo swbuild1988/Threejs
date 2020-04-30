@@ -23,8 +23,7 @@
                 if (element) {
                     let width: number = element.offsetWidth
                     let height: number = element.offsetHeight
-                    console.log("width0", width)
-                    console.log("height0", height)
+                    
                     let game: Game = new Game(element)
 
                     game.createScene()
