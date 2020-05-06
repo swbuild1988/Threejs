@@ -22,6 +22,8 @@ export class ThreeOption {
     public zRotation: number
     /** 投射阴影 */
     public castShadow: boolean
+    /** 接收投影 */
+    public receiveShadow: boolean
     /** 透明 */
     public transparent: boolean
     /** 透明度 */
@@ -48,6 +50,7 @@ export class ThreeOption {
         _yRotation = 0,
         _zRotation = 0,
         _castShadow = true,
+        _receiveShadow = true,
         _transparent = false,
         _opacity = 1,
         _textureUrl = '',
@@ -67,6 +70,7 @@ export class ThreeOption {
         _yRotation ? : number,
         _zRotation ? : number,
         _castShadow ? : boolean,
+        _receiveShadow ? : boolean,
         _transparent ? : boolean,
         _opacity ? : number,
         _textureUrl ? : string,
@@ -86,6 +90,7 @@ export class ThreeOption {
         this.yRotation = _yRotation
         this.zRotation = _zRotation
         this.castShadow = _castShadow
+        this.receiveShadow = _receiveShadow
         this.transparent = _transparent
         this.opacity = _opacity
         this.textureUrl = _textureUrl

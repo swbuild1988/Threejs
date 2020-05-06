@@ -54,6 +54,8 @@ export class Game {
             antialias: true,
             alpha: true
         })
+        this._renderer.shadowMap.enabled = true
+        this._renderer.shadowMap.type = THREE.PCFSoftShadowMap
 
         // 随便建个盒子玩
         this._geometry = new THREE.BoxGeometry(100, 100, 100)
@@ -62,18 +64,19 @@ export class Game {
             map: texture
         })
         this._box = new THREE.Mesh(this._geometry, this._material)
-        // this._box.position.set(0, 200, 80)
+        this._box.position.set(0, 200, 80)
+        this._box.castShadow = true
         this._scene.add(this._box)
     }
 
     private initLight(): void {
         // 平行光，约等于太阳光
         let light1 = new THREE.SpotLight(0xffffff)
-        light1.position.set(1000, 1000, 800)
+        light1.position.set(800, 1000, 800)
         light1.castShadow = true
 
-        light1.shadow.mapSize.width = 1024
-        light1.shadow.mapSize.height = 1024
+        light1.shadow.mapSize.width = 2048
+        light1.shadow.mapSize.height = 2048
 
         light1.shadow.camera.near = 500
         light1.shadow.camera.far = 4000
@@ -82,7 +85,7 @@ export class Game {
         this._scene.add(light1)
 
         // 环境光，周围亮一点
-        let light2 = new THREE.AmbientLight(0x555555) // soft white light
+        let light2 = new THREE.AmbientLight(0x444444) // soft white light
         this._scene.add(light2)
 
     }
@@ -170,7 +173,7 @@ export class Game {
             } else {
                 // 变色透明
                 var material = new THREE.MeshLambertMaterial({
-                    color: 0xcc0000,
+                    color: 0xeeeeee,
                     transparent: true,
                     opacity: 0.6
                 })
@@ -189,7 +192,7 @@ export class Game {
         this._box.rotation.y += 0.02
 
         if (this._doorStatus) {
-            let speed = 0.5
+            let speed = 2
             this._leftDoorMesh.position.x += -1 * speed * this._doorDirection
             this._rightDoorMesh.position.x += speed * this._doorDirection
             if (this._leftDoorInitX - this._leftDoorMesh.position.x >= this._doorOpenLength ||
@@ -213,7 +216,7 @@ export class Game {
             _y: -5,
             _color: '#BEC9BE',
             _textureUrl: 'floor',
-            _textureRepeat: 10
+            _textureRepeat: 10,
         })
         this._boxes.push(floor)
         this.makeBoxGeometry(floor)
@@ -349,7 +352,9 @@ export class Game {
             _y: 95,
             _z: 500,
             _textureUrl: 'door-left',
-            _transparent: true
+            _transparent: true,
+            _castShadow: false,
+            _receiveShadow: false,
         })
         this._boxes.push(leftDoor)
         this.makeBoxGeometry(leftDoor)
@@ -366,7 +371,9 @@ export class Game {
             _y: 95,
             _z: 500,
             _textureUrl: 'door-right',
-            _transparent: true
+            _transparent: true,
+            _castShadow: false,
+            _receiveShadow: false,
         })
         this._boxes.push(rightDoor)
         this.makeBoxGeometry(rightDoor)
@@ -400,7 +407,9 @@ export class Game {
             _y: 110,
             _z: 500,
             _transparent: true,
-            _opacity: 0.4
+            _opacity: 0.4,
+            _castShadow: false,
+            _receiveShadow: false,
         })
         this._boxes.push(window)
         this.makeBoxGeometry(window)
@@ -441,7 +450,9 @@ export class Game {
             _x: -795,
             _y: 120,
             _transparent: true,
-            _opacity: 0.4
+            _opacity: 0.4,
+            _castShadow: false,
+            _receiveShadow: false,
         })
         this._boxes.push(window1)
         this.makeBoxGeometry(window1)
@@ -480,7 +491,9 @@ export class Game {
             _x: 795,
             _y: 120,
             _transparent: true,
-            _opacity: 0.4
+            _opacity: 0.4,
+            _castShadow: false,
+            _receiveShadow: false,
         })
         this._boxes.push(window2)
         this.makeBoxGeometry(window2)
@@ -529,6 +542,7 @@ export class Game {
         mesh.rotation.y = config.yRotation * Math.PI / 180
         mesh.rotation.z = config.zRotation * Math.PI / 180
         mesh.castShadow = config.castShadow
+        mesh.receiveShadow = config.receiveShadow
 
         /**
          * 如果已经有了对象，则对其进行各种处理
@@ -547,6 +561,8 @@ export class Game {
                 let tmp: THREE.Mesh = BSP.toMesh()
                 tmp.name = last.name
                 tmp.material = last.material
+                tmp.castShadow = last.castShadow
+                tmp.receiveShadow = last.receiveShadow
                 this._gameObject.push(tmp)
             } else { // gameobject为空
                 this._gameObject.push(mesh)
@@ -562,6 +578,8 @@ export class Game {
                 let tmp: THREE.Mesh = BSP.toMesh()
                 tmp.name = last.name
                 tmp.material = last.material
+                tmp.castShadow = last.castShadow
+                tmp.receiveShadow = last.receiveShadow
                 this._gameObject.push(tmp)
             } else { // gameobject为空
                 this._gameObject.push(mesh)
