@@ -21,7 +21,7 @@
         "nprogress": "^0.2.0",
         "postcss-pxtorem": "^4.0.1",
         "three": "^0.115.0",
-        "three-orbitcontrols-ts": "^0.1.2",
+        "three-outlinepass": "^1.0.7",
         "tthreebsp": "^1.0.8",
         "typescript": "^3.8.3",
         "view-design": "^4.0.1",

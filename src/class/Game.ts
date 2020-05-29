@@ -2,7 +2,7 @@ import * as THREE from 'three'
 const ThreeBSP = require('tthreebsp')(THREE)
 import {
     OrbitControls
-} from 'three-orbitcontrols-ts'
+} from 'three/examples/jsm/controls/OrbitControls'
 import {
     ThreeOption
 } from '@/class/ThreeOption'
@@ -64,7 +64,7 @@ export class Game {
             map: texture
         })
         this._box = new THREE.Mesh(this._geometry, this._material)
-        this._box.position.set(0, 200, 80)
+        this._box.position.set(-50, 300, 80)
         this._box.castShadow = true
         this._scene.add(this._box)
     }
@@ -72,7 +72,7 @@ export class Game {
     private initLight(): void {
         // 平行光，约等于太阳光
         let light1 = new THREE.SpotLight(0xffffff)
-        light1.position.set(800, 1000, 800)
+        light1.position.set(-600, 1000, 1000)
         light1.castShadow = true
 
         light1.shadow.mapSize.width = 2048
@@ -130,6 +130,7 @@ export class Game {
         this.createWindow()
         this.createOutWall()
         this.createText()
+        this.createStool()
 
         // 将所有的对象添加到场景中
         this._gameObject.forEach((object: THREE.Mesh) => {
@@ -515,6 +516,20 @@ export class Game {
         })
         this._boxes.push(text)
         this.makeBoxGeometry(text)
+    }
+
+    /** 添加凳子 */
+    private createStool(): void {
+        let geometry: THREE.BoxGeometry = new THREE.BoxGeometry(400, 100, 100)
+        let texture: THREE.Texture = new THREE.TextureLoader().load(require('@/assets/stool-up.png'))
+        let material: THREE.MeshLambertMaterial = new THREE.MeshLambertMaterial({
+            map: texture,
+            transparent: true,
+        })
+        let box = new THREE.Mesh(geometry, material)
+        box.position.set(400, 50, -300)
+        box.castShadow = true
+        this._scene.add(box)
     }
 
     /** 生成盒子 */

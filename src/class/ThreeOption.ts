@@ -34,6 +34,8 @@ export class ThreeOption {
     public textureRepeat: number
     /** 运算（集合“+”或者删除“-”） */
     public op: string
+    /** 运算的父亲名 */
+    public fatherName: string
     /** 路径 */
     public paths: number[][]
 
@@ -51,11 +53,12 @@ export class ThreeOption {
         _zRotation = 0,
         _castShadow = true,
         _receiveShadow = true,
-        _transparent = false,
-        _opacity = 1,
+        _transparent = true,
+        _opacity = 0.5,
         _textureUrl = '',
         _textureRepeat = 1,
         _op = '',
+        _fatherName = '',
         _paths = [],
     }: {
         _name ? : string,
@@ -76,6 +79,7 @@ export class ThreeOption {
         _textureUrl ? : string,
         _textureRepeat ? : number,
         _op ? : string,
+        _fatherName ? : string,
         _paths ? : number[][]
     }) {
         this.name = _name
@@ -96,6 +100,7 @@ export class ThreeOption {
         this.textureUrl = _textureUrl
         this.textureRepeat = _textureRepeat
         this.op = _op
+        this.fatherName = _fatherName
         this.paths = _paths
     }
 }

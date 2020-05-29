@@ -1,5 +1,10 @@
 <template>
-    <div class="three" id="three_id"></div>
+    <div class="edit_module">
+        <div class="three" id="three_id"></div>
+        <div class="edit_three">
+            编辑三维
+        </div>
+    </div>
 </template>
 
 <script lang="ts">
@@ -8,25 +13,21 @@
         Vue
     } from 'vue-property-decorator'
     import {
-        Game
-    } from '@/class/Game'
+        EditModule
+    } from '@/class/EditModule'
 
 
 
     @Component({})
     export default class ThreeClass extends Vue {
-        
+
         mounted() {
             setTimeout(() => {
 
                 let element: HTMLElement | null = document.getElementById("three_id")
                 if (element) {
-                    let width: number = element.offsetWidth
-                    let height: number = element.offsetHeight
-                    
-                    let game: Game = new Game(element)
-
-                    game.createScene()
+                    let game: EditModule = new EditModule(element)
+                    game.draw()
 
                 }
             }, 10)
@@ -35,8 +36,21 @@
 </script>
 
 <style scoped>
-    .three {
+    .edit_module {
         width: 100%;
+        height: 100%;
+    }
+
+    .three {
+        float: left;
+        width: 75%;
+        height: 100%;
+        border: 1px solid red;
+    }
+
+    .edit_three {
+        float: right;
+        width: 25%;
         height: 100%;
         border: 1px solid red;
     }
